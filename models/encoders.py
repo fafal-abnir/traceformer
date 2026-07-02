@@ -61,6 +61,7 @@ class WalkTransformer(nn.Module):
         dropout: float = 0.1,
     ) -> None:
         super().__init__()
+
         layer = nn.TransformerEncoderLayer(
             d_model=model_dim,
             nhead=nhead,
@@ -69,19 +70,45 @@ class WalkTransformer(nn.Module):
             batch_first=True,
             activation="gelu",
         )
-        self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+
+        self.encoder = nn.TransformerEncoder(
+            layer,
+            num_layers=num_layers,
+            enable_nested_tensor=False,
+        )
+
         self.cls = nn.Parameter(torch.randn(1, 1, model_dim))
 
     def forward(self, x: torch.Tensor, valid_mask: torch.Tensor) -> torch.Tensor:
+        """
+        x:          [B, L, D]
+        valid_mask: [B, L], True for valid walk steps, False for padding
+        """
+
         bsz = x.size(0)
+
+        x = x.contiguous()
+        valid_mask = valid_mask.bool().contiguous()
+
         cls = self.cls.expand(bsz, -1, -1)
-        x = torch.cat([cls, x], dim=1)
+        x = torch.cat([cls, x], dim=1).contiguous()
 
-        cls_mask = torch.ones((bsz, 1), dtype=valid_mask.dtype, device=valid_mask.device)
-        valid_mask = torch.cat([cls_mask, valid_mask], dim=1)
+        cls_mask = torch.ones(
+            (bsz, 1),
+            dtype=torch.bool,
+            device=valid_mask.device,
+        )
 
-        key_padding_mask = ~valid_mask.bool()
-        out = self.encoder(x, src_key_padding_mask=key_padding_mask)
+        valid_mask = torch.cat([cls_mask, valid_mask], dim=1).contiguous()
+
+        # Transformer expects True where positions should be ignored
+        key_padding_mask = (~valid_mask).contiguous()
+
+        out = self.encoder(
+            x,
+            src_key_padding_mask=key_padding_mask,
+        )
+
         return out[:, 0, :]
 
 

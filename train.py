@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument("--history-window-days", type=float, default=90.0)
 
     parser.add_argument("--walk-length", type=int, default=4)
-    parser.add_argument("--num-walks", type=int, default=1)
+    parser.add_argument("--num-walks", type=int, default=4)
     parser.add_argument("--neighbor-sample-size", type=int, default=10)
 
     parser.add_argument("--role-dim", type=int, default=32)
@@ -48,12 +48,21 @@ def parse_args():
     parser.add_argument("--grad-clip", type=float, default=1.0)
     parser.add_argument("--threshold", type=float, default=0.5)
 
-    parser.add_argument("--early-stop-patience", type=int, default=20)
+    parser.add_argument("--early-stop-patience", type=int, default=50)
     parser.add_argument("--neg-to-pos-ratio", type=int, default=40)
     parser.add_argument("--max-pos-weight", type=float, default=50.0)
 
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--cpu", action="store_true")
+
+    # ablations
+    parser.add_argument("--ablate-edge-only", action="store_true")
+    parser.add_argument("--ablate-edge-role-only", action="store_true")
+    parser.add_argument("--ablate-no-role", action="store_true")
+    parser.add_argument("--ablate-no-walks", action="store_true")
+    parser.add_argument("--ablate-no-transformer", action="store_true")
+    parser.add_argument("--ablate-no-walk-attn", action="store_true")
+    parser.add_argument("--ablate-no-edge-gap", action="store_true")
 
     return parser.parse_args()
 
@@ -62,14 +71,17 @@ def main():
     args = parse_args()
     print(colored(vars(args), "red"))
     set_seed(args.seed)
-    experiment_datetime = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+
+    experiment_datetime = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
     lightning_root_dir = "experiments"
+
     csv_logger = CSVLogger(
         save_dir=lightning_root_dir,
         name=f"{args.dataset}/{experiment_datetime}",
         version=None,
     )
     csv_logger.log_hyperparams(vars(args))
+
     dm = AMLDataModule(args)
     dm.setup()
 
@@ -97,14 +109,6 @@ def main():
         ),
     ]
 
-    # trainer = L.Trainer(
-    #     max_epochs=args.epochs,
-    #     accelerator=accelerator,
-    #     devices=1,
-    #     gradient_clip_val=args.grad_clip,
-    #     callbacks=callbacks,
-    #     log_every_n_steps=10,
-    # )
     trainer = L.Trainer(
         max_epochs=args.epochs,
         accelerator=accelerator,

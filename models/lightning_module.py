@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 import lightning as L
@@ -23,6 +22,13 @@ class LitTemporalRIWalk(L.LightningModule):
             step_dim=args.step_dim,
             walk_ctx_dim=args.step_dim,
             graph_ctx_dim=args.graph_ctx_dim,
+            ablate_edge_only=args.ablate_edge_only,
+            ablate_edge_role_only=args.ablate_edge_role_only,
+            ablate_no_role=args.ablate_no_role,
+            ablate_no_walks=args.ablate_no_walks,
+            ablate_no_transformer=args.ablate_no_transformer,
+            ablate_no_walk_attn=args.ablate_no_walk_attn,
+            ablate_no_edge_gap=args.ablate_no_edge_gap,
         )
 
         self.register_buffer("pos_weight_tensor", pos_weight.clone().detach())
