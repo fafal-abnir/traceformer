@@ -20,7 +20,8 @@ def parse_args():
         "--dataset",
         type=str,
         required=True,
-        choices=["samld", "amlworld", "amlsim", "bitcoin_alpha", "bitcoin_otc"],
+        choices=["samld", "amlworld", "amlsim", "bitcoin_alpha",
+                 "bitcoin_otc", "ascendexhacker", "upbithack"]
     )
     parser.add_argument("--csv", type=str, required=True)
     parser.add_argument("--max-events", type=int, default=None)

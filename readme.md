@@ -1,206 +1,103 @@
-# TraceFormer-AML
+# TraceFormer
 
-![Alt text](assets/traceformer_arch.png)
 
-This repository contains the **official implementation** of the paper:
 
-> **TraceFormer-AML: Role-Aware Causal Sequence Modeling for Anti-Money Laundering Detection in Temporal Transaction Graphs**
+Official implementation of:
 
-TraceFormer-AML is a **temporal transaction-graph model** for AML detection.  
-It combines **temporal role features**, **causal anonymous walk sampling**, **Transformer-based sequence encoding**, and **attention-based aggregation** for suspicious transaction classification.
+> **TraceFormer: A Role-Aware Temporal Trace Transformer for Money Laundering Detection**
+
+
+TraceFormer is a temporal graph model for suspicious-transaction classification in continuous-time financial networks. For each target transaction, it constructs multiple backward time-respecting traces from the sender and receiver, represents historical interactions using event-time behavioral roles and transaction attributes, and aggregates the resulting trace representations for prediction.
+
 
 ---
 
 ## Overview
 
-Real-world financial systems generate massive streams of transactions that naturally form **dynamic graphs**.  
-In anti-money laundering (AML), suspicious behavior is often **rare**, **temporally structured**, and **hard to detect from static snapshots alone**.
+Financial transactions naturally form directed temporal multigraphs in which multiple transfers may occur between the same accounts at different times. Suspicious activity is often difficult to identify from a transaction in isolation because relevant evidence may be distributed across earlier interactions.
 
-TraceFormer-AML is designed for this setting by modeling:
+TraceFormer models this historical context through:
 
-- **historical interaction structure** through temporal role features
-- **causal transaction history** through backward temporal walks
-- **sequential behavior patterns** through Transformer encoding
-- **transaction-level risk** through edge classification
+- temporal behavioral features computed from strictly pre-event activity
+- backward time-respecting walks sampled from both transaction endpoints
+- role-conditioned tokens describing historical interactions
+- Transformer-based trace encoding
+- attention-based aggregation over multiple sampled traces
+- current transaction attributes and sender-side recency information
 
-The method is particularly suited for datasets such as:
+All historical features and walks are constructed using only events that occurred before the target transaction timestamp.
+
+---
+
+## Supported Datasets
+
+The current implementation supports seven datasets.
+
+### AML-oriented transaction networks
 
 - **SAML-D**
-- **AMLWorld**
+- **AMLWorld-HI-Small**
 - **AMLSim**
+- **AscendEXHacker**
+- **UpbitHack**
+
+### Auxiliary temporal interaction networks
+
+- **Bitcoin-Alpha**
+- **Bitcoin-OTC**
+
+Dataset-specific preprocessing includes:
+
+- chronological event ordering;
+- sender and receiver reindexing;
+- timestamp conversion;
+- transaction-amount transformation;
+- continuous-feature scaling using training data;
+- categorical-feature encoding;
+- construction of transaction-level labels and edge features.
+
+Bitcoin-Alpha and Bitcoin-OTC are signed trust networks rather than financial transaction networks. Negative ratings are treated as positive-class edges, while the rating value itself is excluded from the input features.
 
 ---
-
-## Key Idea
-
-Suspicious financial behavior is often better characterized by **how an account behaves over time** than by static graph structure alone.
-
-TraceFormer-AML tackles this by:
-
-- computing **time-dependent structural role features** for each node
-- sampling **causal walks** over past transaction history
-- encoding those walks as **role-aware temporal sequences**
-- aggregating multiple historical traces with **attention**
-- predicting whether a transaction is suspicious
-
-This allows the model to capture patterns such as:
-
-- fast pass-through behavior
-- bursty transaction chains
-- changing sender/receiver roles over time
-- repeated or unusual historical interaction traces
-
----
-
-## Method Summary
-
-TraceFormer-AML consists of four main components:
-
-1. **Temporal Graph Construction**  
-   Raw transaction records are converted into a continuous-time event stream:
-   \[
-   e = (u, v, t, a, y)
-   \]
-   where \(u\) is sender, \(v\) is receiver, \(t\) is time, \(a\) is amount, and \(y\) is the AML label.
-
-2. **Temporal Role Feature Extraction**  
-   For each node at a given time, the model computes rolling structural features such as:
-   - in/out degree
-   - in/out transaction volume
-   - fan-in / fan-out ratio
-   - pass-through ratio
-   - recency and mean inter-event gaps
-   - unique counterparties and repeated interaction rate
-
-3. **Causal Anonymous Walk Sampling**  
-   For each target transaction, the model samples **backward temporal walks** over historical neighbors, using only events strictly before the target time.
-
-4. **Transformer-Based Walk Encoding and Attention Aggregation**  
-   Each walk is encoded as a temporal sequence of:
-   - role features
-   - time gaps
-   - direction
-   - amount bucket
-   - anonymous count
-
-   Walks are encoded with a **Transformer**, then aggregated with **attention** to produce sender and receiver context representations for final transaction classification.
 
 ---
 
 ## Repository Structure
 
-The codebase follows a modular design with **PyTorch Lightning**.
+```text
+traceformer/
+├── assets/traceformer_arch.png
+├── data/
+│   ├── datasets.py          # Dataset preprocessing and event construction
+│   └── datamodule.py        # Splits, sampling, weighting, and batch preparation
+├── graph/
+│   ├── temporal_store.py    # Time-ordered historical edge lookup
+│   ├── temporal_features.py # Temporal behavioral features
+│   └── walk_sampler.py      # Backward time-respecting walks
+├── models/
+│   ├── encoders.py          # Role, step, Transformer, and attention encoders
+│   ├── temporal_model.py    # TraceFormer and ablations
+│   └── lightning_module.py  # Training, validation, and testing
+├── utils/
+│   ├── batching.py
+│   ├── metrics.py
+│   └── seed.py
+├── train.py
+└── requirements.txt
+```
 
-**Top-level files**
-- `train.py`  
-  Main entry point for training and evaluation.
-- `requirements.txt`  
-  Python dependencies.
 
-**Directories**
-- `data/`  
-  Dataset loaders, event construction, and Lightning `DataModule`.
-- `graph/`  
-  Temporal graph storage, temporal feature extraction, and causal walk sampling.
-- `models/`  
-  Neural encoders, main model, and Lightning module.
-- `utils/`  
-  Utility functions for batching, metrics, and reproducibility.
-
-### Main modules
-
-- `data/datasets.py`  
-  Dataset-specific preprocessing for:
-  - SAML-D
-  - AMLWorld
-  - AMLSim
-
-- `data/datamodule.py`  
-  PyTorch Lightning `DataModule` for train/val/test preparation.
-
-- `graph/temporal_store.py`  
-  Stores historical incoming/outgoing edges and supports causal lookup.
-
-- `graph/temporal_features.py`  
-  Computes temporal structural role features and precomputes event-level role states.
-
-- `graph/walk_sampler.py`  
-  Implements causal anonymous walk sampling.
-
-- `utils/batching.py`  
-  Converts raw events into padded model batches.
-
-- `models/encoders.py`  
-  Role encoder, step encoder, Transformer walk encoder, and attention aggregator.
-
-- `models/temporal_model.py`  
-  Main TraceFormer-AML architecture.
-
-- `models/lightning_module.py`  
-  Lightning training/validation/testing logic.
-
----
-
-## Dataset Processing
-
-The repository supports multiple AML datasets through dataset-specific preprocessing functions.
-
-Currently supported:
-- **SAML-D**
-- **AMLWorld**
-- **AMLSim**
-
-Processing includes:
-- parsing transaction records
-- reindexing sender and receiver IDs
-- converting timestamps into continuous-time event streams
-- scaling transaction amounts
-- encoding categorical edge attributes
-- building edge-level events for temporal modeling
-
-### Notes on categorical features
-
-Different datasets use different transaction metadata.  
-The current implementation uses:
-
-- **one-hot encoding** for low-cardinality categories
-- **ordinal encoding** for higher-cardinality transaction attributes such as bank identifiers
-
-This keeps edge features compact while remaining flexible across datasets.
-
-### Data location
-
-Place raw dataset files in a suitable location and pass the file path with `--csv`.
-
-Examples:
-- `data/samld/SAML-D.csv`
-- `data/amlworld/HI-Small_Trans.csv`
-- `data/amlsim/transactions.csv`
-
----
-
-## Implemented Model
-
-The repository currently includes:
-
-- **TraceFormer-AML** (proposed method)
-
-The model combines:
-- temporal role-aware feature extraction
-- causal historical walks
-- Transformer sequence modeling
-- attention-based aggregation
-- edge-level AML classification
-
----
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python **3.10** or higher
-- CUDA-enabled GPU recommended
+- Python 3.10+
+- PyTorch 2.4
+- PyTorch Geometric
 - PyTorch Lightning
+- CUDA-capable GPU recommended for large datasets
+- Poetry
 
 ---
 
@@ -222,3 +119,106 @@ pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -
 pip install torch-geometric
 pip3 install -r requirements.txt 
 ```
+
+## Data Preparation
+
+Pass the dataset file through `--csv`.
+
+```text
+raw_data/
+├── SAML-D.csv
+├── AMLWorld-HI-Small.csv
+├── AMLSim.csv
+├── soc-sign-bitcoinalpha.csv
+├── soc-sign-bitcoinotc.csv
+├── AscendEXHacker_transaction.csv
+└── UpbitHack_transaction.csv
+```
+
+See `data/datasets.py` for expected schemas and preprocessing.
+
+---
+
+## Training
+
+```bash
+python train.py \
+  --dataset <dataset-name> \
+  --csv <path-to-csv>
+```
+
+Supported identifiers:
+
+```text
+samld
+amlworld
+amlsim
+bitcoin_alpha
+bitcoin_otc
+ascendexhacker
+upbithack
+```
+
+Example:
+
+```bash
+python train.py \
+  --dataset amlsim \
+  --csv raw_data/AMLSim.csv \
+  --epochs 100 \
+  --batch-size 2048 \
+  --eval-batch-size 4096 \
+  --short-window-days 7 \
+  --long-window-days 30 \
+  --history-window-days 90 \
+  --walk-length 1 \
+  --num-walks 16 \
+  --neighbor-sample-size 10 \
+  --lr 0.001 \
+  --early-stop-patience 10 \
+  --seed 42
+```
+
+CPU example:
+
+```bash
+python train.py \
+  --dataset bitcoin_otc \
+  --csv raw_data/soc-sign-bitcoinotc.csv \
+  --cpu
+```
+
+---
+
+## Main Arguments
+
+| Group | Arguments and defaults                                                       |
+|---|------------------------------------------------------------------------------|
+| Data | `--dataset` required, `--csv` required                                       |
+| Split | `--train-ratio 0.70`, `--val-ratio 0.15`                                     |
+| Windows | `--short-window-days 7`, `--long-window-days 30`, `--history-window-days 90` |
+| Walks | `--walk-length 4`, `--num-walks 4`, `--neighbor-sample-size 10`              |
+| Dimensions | `--role-dim 32`, `--step-dim 128`, `--graph-ctx-dim 128`                     |
+| Optimization | `--lr 1e-3`, `--weight-decay 1e-5`                                           |
+| Imbalance | `--neg-to-pos-ratio 40`, `--max-pos-weight 50`                               |
+| Runtime | `--seed 42`, `--cpu`                                                         |
+
+Run `python train.py --help` for the complete interface.
+
+---
+
+---
+
+## Temporal Leakage and Reproducibility
+
+For every target event at $`\sqrt{3x-1}+(1+x)^2`$ time  t_i $$:
+
+- only interactions with \(t_j<t_i\) are retrieved;
+- the target event is excluded from its own history;
+- equal-timestamp events are excluded from one another's history;
+- preprocessing statistics are fitted on the training portion where applicable;
+- validation and test events do not affect earlier representations.
+
+Walks for the same node-time query are cached within a run. Different seeds may produce different sampled histories.
+
+---
