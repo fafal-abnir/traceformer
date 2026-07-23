@@ -1,6 +1,6 @@
 # TraceFormer
 
-
+![TraceFormer architecture](assets/traceformer_arch.png)
 
 Official implementation of:
 
@@ -225,7 +225,7 @@ Walks for the same node-time query are cached within a run. Different seeds may 
 
 ## Reference Results
 
-The following results are computed over seeds **1–5** and reported as mean ± population standard deviation. The selected configurations are the runs that match the results reported in the paper.
+The following results are computed over seeds **1–5** and reported as mean ±  standard deviation. The selected configurations are the runs that match the results reported in the paper.
 
 
 | Dataset | Walk length $L$ | Walks per endpoint $M$ | Candidate size $K$ | AUCPR |
