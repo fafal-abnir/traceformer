@@ -211,9 +211,9 @@ Run `python train.py --help` for the complete interface.
 
 ## Temporal Leakage and Reproducibility
 
-For every target event at  time  $`t_i`$:
+For every target event at  time  $t_i$:
 
-- only interactions with $`t_j<t_i`$ are retrieved;
+- only interactions with $t_j<t_i$ are retrieved;
 - the target event is excluded from its own history;
 - equal-timestamp events are excluded from one another's history;
 - preprocessing statistics are fitted on the training portion where applicable;
