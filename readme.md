@@ -107,7 +107,7 @@ Clone the repository:
 
 ```bash
 git clone https://github.com/fafal-abnir/traceformer
-cd traceformer-aml
+cd traceformer
 ```
 
 Create and activate the virtual environment and install dependencies:
