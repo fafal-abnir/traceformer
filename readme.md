@@ -211,9 +211,9 @@ Run `python train.py --help` for the complete interface.
 
 ## Temporal Leakage and Reproducibility
 
-For every target event at $`\sqrt{3x-1}+(1+x)^2`$ time  t_i $$:
+For every target event at  time  $`t_i`$:
 
-- only interactions with \(t_j<t_i\) are retrieved;
+- only interactions with $`t_j<t_i`$ are retrieved;
 - the target event is excluded from its own history;
 - equal-timestamp events are excluded from one another's history;
 - preprocessing statistics are fitted on the training portion where applicable;
@@ -222,3 +222,18 @@ For every target event at $`\sqrt{3x-1}+(1+x)^2`$ time  t_i $$:
 Walks for the same node-time query are cached within a run. Different seeds may produce different sampled histories.
 
 ---
+
+## Reference Results
+
+The following results are computed over seeds **1–5** and reported as mean ± population standard deviation. The selected configurations are the runs that match the results reported in the paper.
+
+
+| Dataset | Walk length L | Walks per endpoint M | Candidate size K | AUCPR | AUROC |
+|:--|--:|--:|--:|:--|:--|
+| Bitcoin-OTC | 1 | 16 | 10 | 0.394 ± 0.013 | 0.771 ± 0.006 |
+| Bitcoin-Alpha | 1 | 16 | 10 | 0.306 ± 0.021 | 0.701 ± 0.033 |
+| AMLSim | 1 | 16 | 10 | 0.670 ± 0.045 | 0.986 ± 0.002 |
+| SAML-D | 1 | 16 | 10 | 0.951 ± 0.007 | 0.999 ± 0.000 |
+| AMLWorld-HI-Small | 2 | 40 | 20 | 0.152 ± 0.028 | 0.951 ± 0.003 |
+| AscendEXHacker | 1 | 16 | 10 | 0.528 ± 0.057 | 0.917 ± 0.015 |
+| UpbitHack | 2 | 40 | 10 | 0.523 ± 0.009 | 0.776 ± 0.012 |
