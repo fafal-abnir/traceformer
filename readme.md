@@ -9,6 +9,8 @@ Official implementation of:
 
 TraceFormer is a temporal graph model for suspicious-transaction classification in continuous-time financial networks. For each target transaction, it constructs multiple backward time-respecting traces from the sender and receiver, represents historical interactions using event-time behavioral roles and transaction attributes, and aggregates the resulting trace representations for prediction.
 
+[Baselines-repo](https://anonymous.4open.science/r/lasgnn-0BC6/readme.md)
+
 
 ---
 
