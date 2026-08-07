@@ -1,6 +1,6 @@
 # TraceFormer
 
-![TraceFormer architecture](assets/traceformer.pdf)
+![TraceFormer architecture](assets/traceformer.png)
 
 Official implementation of:
 
