@@ -22,6 +22,7 @@ class LitTemporalRIWalk(L.LightningModule):
             step_dim=args.step_dim,
             walk_ctx_dim=args.step_dim,
             graph_ctx_dim=args.graph_ctx_dim,
+            max_walk_length=args.walk_length,
             ablate_edge_only=args.ablate_edge_only,
             ablate_edge_role_only=args.ablate_edge_role_only,
             ablate_no_role=args.ablate_no_role,

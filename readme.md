@@ -1,6 +1,6 @@
 # TraceFormer
 
-![TraceFormer architecture](assets/traceformer_arch.png)
+![TraceFormer architecture](assets/traceformer.pdf)
 
 Official implementation of:
 
@@ -224,18 +224,3 @@ For every target event at  time  $t_i$:
 Walks for the same node-time query are cached within a run. Different seeds may produce different sampled histories.
 
 ---
-
-## Reference Results
-
-The following results are computed over seeds **1–5** and reported as mean ±  standard deviation. The selected configurations are the runs that match the results reported in the paper.
-
-
-| Dataset | Walk length $L$ | Walks per endpoint $M$ | Candidate size $K$ | AUCPR |
-|--|--|--|--|--|
-| Bitcoin-OTC | 1 | 16 | 10 | 0.394 ± 0.013 |
-| Bitcoin-Alpha | 1 | 16 | 10 | 0.306 ± 0.021 |
-| AMLSim | 1 | 16 | 10 | 0.670 ± 0.045 |
-| SAML-D | 2 | 16 | 10 | 0.951 ± 0.007 |
-| AMLWorld-HI-Small | 2 | 40 | 20 | 0.152 ± 0.028 |
-| AscendEXHacker | 2 | 16 | 10 | 0.528 ± 0.057 |
-| UpbitHack | 2 | 40 | 10 | 0.523 ± 0.009 |

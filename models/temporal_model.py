@@ -40,6 +40,7 @@ class TemporalRIWalkModel(nn.Module):
         step_dim: int = 128,
         walk_ctx_dim: int = 128,
         graph_ctx_dim: int = 128,
+        max_walk_length: int = 4,
         ablate_edge_only: bool = False,
         ablate_edge_role_only: bool = False,
         ablate_no_role: bool = False,
@@ -80,6 +81,7 @@ class TemporalRIWalkModel(nn.Module):
                 nhead=4,
                 num_layers=2,
                 dropout=0.1,
+                max_walk_length=max_walk_length,
             )
 
         if self.ablate_no_walk_attn:

@@ -59,8 +59,12 @@ class WalkTransformer(nn.Module):
         nhead: int = 4,
         num_layers: int = 2,
         dropout: float = 0.1,
+        max_walk_length: int = 4,
     ) -> None:
         super().__init__()
+
+        if max_walk_length < 1:
+            raise ValueError("max_walk_length must be at least 1")
 
         layer = nn.TransformerEncoderLayer(
             d_model=model_dim,
@@ -78,6 +82,8 @@ class WalkTransformer(nn.Module):
         )
 
         self.cls = nn.Parameter(torch.randn(1, 1, model_dim))
+        # Position 0 is reserved for CLS; walk steps use positions 1..L.
+        self.position_embedding = nn.Embedding(max_walk_length + 1, model_dim)
 
     def forward(self, x: torch.Tensor, valid_mask: torch.Tensor) -> torch.Tensor:
         """
@@ -85,13 +91,24 @@ class WalkTransformer(nn.Module):
         valid_mask: [B, L], True for valid walk steps, False for padding
         """
 
-        bsz = x.size(0)
+        bsz, walk_length, _ = x.shape
+        if walk_length >= self.position_embedding.num_embeddings:
+            raise ValueError(
+                f"walk length {walk_length} exceeds configured maximum "
+                f"{self.position_embedding.num_embeddings - 1}"
+            )
 
         x = x.contiguous()
         valid_mask = valid_mask.bool().contiguous()
 
         cls = self.cls.expand(bsz, -1, -1)
         x = torch.cat([cls, x], dim=1).contiguous()
+        positions = torch.arange(
+            walk_length + 1,
+            dtype=torch.long,
+            device=x.device,
+        )
+        x = x + self.position_embedding(positions).unsqueeze(0)
 
         cls_mask = torch.ones(
             (bsz, 1),
